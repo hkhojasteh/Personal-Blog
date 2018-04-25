@@ -6,38 +6,13 @@
 #include <opencv2/imgproc.hpp>
 #include <opencv2/highgui.hpp>
 
-const char* keys =
-"{ help  h     | | Print help message. }"
-"{ input i     | | Path to input image or video file. Skip this argument to capture frames from a camera.}"
-"{ model m     | | Path to a binary file of model contains trained weights. "
-"It could be a file with extensions .caffemodel (Caffe), "
-".pb (TensorFlow), .t7 or .net (Torch), .weights (Darknet) }"
-"{ config c    | | Path to a text file of model contains network configuration. "
-"It could be a file with extensions .prototxt (Caffe), .pbtxt (TensorFlow), .cfg (Darknet) }"
-"{ framework f | | Optional name of an origin framework of the model. Detect it automatically if it does not set. }"
-"{ classes     | | Optional path to a text file with names of classes. }"
-"{ mean        | | Preprocess input image by subtracting mean values. Mean values should be in BGR order and delimited by spaces. }"
-"{ scale       | 1 | Preprocess input image by multiplying on a scale factor. }"
-"{ width       |   | Preprocess input image by resizing to a specific width. }"
-"{ height      |   | Preprocess input image by resizing to a specific height. }"
-"{ rgb         |   | Indicate that model works with RGB input images instead BGR ones. }"
-"{ backend     | 0 | Choose one of computation backends: "
-"0: default C++ backend, "
-"1: Halide language (http://halide-lang.org/), "
-"2: Intel's Deep Learning Inference Engine (https://software.seek.intel.com/deep-learning-deployment)}"
-"{ target      | 0 | Choose one of target computation devices: "
-"0: CPU target (by default),"
-"1: OpenCL }";
-
 using namespace cv;
 using namespace std;
 using namespace dnn;
 
-std::vector<std::string> classes;
-
 int main(int argc, char** argv){
 	// Load image
-	Mat3b img = imread("E:\\MyWorks\\personal WebPage Design\\blog\\assets\\CAPTCHA Sample\\19.gif");
+	Mat3b img = imread("E:\\MyWorks\\personal WebPage Design\\blog\\assets\\CAPTCHA Sample\\21.gif");
 
 	// Setup a rectangle to define your region of interest
 	Rect roi(0, 0, img.cols, img.rows / 1.11);
@@ -95,25 +70,29 @@ int main(int argc, char** argv){
 	}
 	
 	Mat img_zeroone;
-	threshold(img_sharp_not, img_zeroone, 120, 1, THRESH_BINARY);
+	threshold(img_sharp_not, img_zeroone, 20, 255, THRESH_BINARY);
 
 	//Make good representation for clustering
 	Mat points = Mat::zeros(sum(img_zeroone)[0], 2, CV_32F);
 	for (int i = 0, k = 0; i < img_zeroone.rows; i++) {
 		for (int j = 0; j < img_zeroone.cols; j++) {
-			if ((int)img_zeroone.at<char>(i, j) == 1) {
+			if ((int)img_zeroone.at<char>(i, j) == 255) {
 				points.at<float>(k, 0) = i;
 				points.at<float>(k, 1) = j;
 				k++;
 			}
 		}
 	}
+	Mat img_segmentation;
+	img_sharp_not.copyTo(img_segmentation);
 	//Clustering
 	Mat kCenters, kLabels;
 	int clusterCount = 5, attempts = 10, iterationNumber = 1e40;
 	kmeans(points, clusterCount, kLabels, TermCriteria(CV_TERMCRIT_ITER | CV_TERMCRIT_EPS, iterationNumber, 1e-4), attempts, KMEANS_PP_CENTERS, kCenters);
 	for (int i = 0; i < kCenters.rows; i++) {
-		circle(img_sharp_not, Point(kCenters.at<float>(i, 1), kCenters.at<float>(i, 0)), 2, (0, 0, 255), -1);
+		float x = kCenters.at<float>(i, 1), y = kCenters.at<float>(i, 0);
+		circle(img_segmentation, Point(x, y), 2, (0, 0, 255), -1);
+		rectangle(img_segmentation, Rect(x - 13, y - 13, 26, 26), Scalar(255, 255, 255));
 	}
 
 	// Show result
@@ -122,6 +101,7 @@ int main(int argc, char** argv){
 	imshow("Gray", img_gray);
 	imshow("Sharpen", img_sharp);
 	imshow("Sharpen not", img_sharp_not);
+	imshow("Segmentation", img_segmentation);
 	imshow("Zero One", img_zeroone);
 	imshow("Histogram", histImage);
 
