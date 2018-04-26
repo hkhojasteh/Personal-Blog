@@ -19,7 +19,7 @@ exit 0
 
 نمونه ای از تصاویر کپچاهای استخراج شده از سیستم گلستان
 حالا حدالامکان تصاویر ورودی به سیستم رو به ساده ترین شکل ممکن تبدیل می کنیم. بدین منظور سعی میکنیم تا نوشته پایین تصاویر رو حذف کنیم.
-از اونجاییکه من یکی از طرفدارای پر و پا قرص زبان های سطح پایین هستم در این مطلب از زبان ++C و کتابخونه OpenCV استفاده خواهیم کرد.
+در این مطلب از کتابخونه ی OpenCV فریم ورک محبوب بینایی کامپیوتر و پردازش تصویر برای پیش پردازش تصاویر استفاده خواهیم کرد (اگر علاقمندید این کتابخونه Python API داره و می تونید از اون هم استفاده کنید).
     Mat3b img = imread(argv[1]);                        //Load image
     Rect roi(0, 0, img.cols, img.rows / 1.11);      //Setup a rectangle to define region of interest
     Mat3b crop = img(roi);                                   //Crop the full image to rectangle ROI
@@ -88,12 +88,55 @@ exit 0
 خروجی خوشه بندی پیکسل ها برای یافتن مرکز کاراکترها و قطعه بندی تصاویر
 پردازش های بیشتری هم میشه روی تصویر انجام داد. مثلا برخی تصاویر که کنتراست (Contrast) کمتری دارند، قابلیت نرمال سازی و افزایش کنتراست رو دارند یا برای جداسازی از روش شمارش تجمعی، کاراکترهایی با طول های متفاوت رو جدا کرد. تا همین میزان پردازش برای ایجاد ورودی های شبکه عصبی؛ یعنی همون کاراکترهای جداگانه با اندازه ثابت، کافی است (اگر دوست دارید شما می تونید تا میزان دلخواه پردازش روی تصویر انجام بدید.).
 ساخت و آموزش شبکه عصبی مصنوعی
-از اونجاییکه ما فقط نیاز به تشخیص یک تصویر از حرف یا عدد داریم، نیازی به معماری پیچیده برای شبکه عصبی نداریم. شناسایی حروف یک مسئله بسیار ساده تر از تشخیص یک تصویر پیچیده (مثل تصاویری از سگ یا گربه که تنوع زیادی داره.) است. در اینجا ما برای حل مسئله شکستن کپچا از یک معماری شبکه عصبی مصنوعی کانولوشنال با دو لایه کانولوشنال (Convolutional) همراه با Pooling و دو لایه تماما متصل (Fully-Connected) استفاده می کنیم. اگر شما این شبکه عصبی ها رو نمیشناسید نگران نباشید. در اینجا نیازی به پیاده سازی های سطح پایین نداریم. اگر علاقمند به یادگیری بیشتر در این زمینه هستید، ویکیپدیا یا این کتاب رو بررسی کنید.
+از اونجاییکه ما فقط نیاز به تشخیص یک تصویر از حرف یا عدد داریم، نیازی به معماری پیچیده برای شبکه عصبی نداریم. شناسایی حروف یک مسئله بسیار ساده تر از تشخیص یک تصویر پیچیده (مثل تصاویری از سگ یا گربه که تنوع زیادی داره.) است. در اینجا ما برای حل مسئله شکستن کپچا از یک معماری شبکه عصبی مصنوعی کانولوشنال با دو لایه کانولوشنال (Convolutional) همراه با Max Pooling و دو لایه تماما متصل (Fully-Connected) استفاده می کنیم. اگر شما این شبکه عصبی ها رو نمیشناسید نگران نباشید. در اینجا نیازی به پیاده سازی های سطح پایین نداریم. اگر علاقمند به یادگیری بیشتر در این زمینه هستید، ویکیپدیا یا این کتاب رو بررسی کنید.
 
 معماری شبکه عصبی مصنوعی کانولوشنال برای شکستن کپچا
-این معماری به صورت زیر تعریف میشه:
-
-برای اجرای این کد می تونید نمونه مدل از پیش یادگرفته شده رو از ریپوزیتوری کدها دانلود کنید. حالا ما می تونیم به صورت خودکار کپچای سیستم گلستان رو بشکنیم! 
-این مطلب به صورت کامل در گیت هاب در دسترس هست. همچنین اگر علاقمند به موضوعات هوش مصنوعی، یادگیری ماشین و بینایی کامپیوتر هستید می تونید اکانت من رو در توییتر دنبال کنید.
- https://twitter.com/hadiakhojasteh/status/875514318271414272 
+برای سادگی آموزش در اینجا از TensorFlow؛ کتابخونه ی یادگیری ماشین گوگل، برای ایجاد شبکه استفاده خواهیم کرد. پیاده سازی این مدل به شکل زیر خواهد بود:
+#conv1
+with tf.variable_scope('conv1') as scope:
+    kernel = _variable_with_weight_decay('weights', shape=[5, 5, 3, 64], stddev=5e-2, wd=None)
+    conv = tf.nn.conv2d(images, kernel, [1, 1, 1, 1], padding='SAME')
+    biases = _variable_on_cpu('biases', [64], tf.constant_initializer(0.0))
+    pre_activation = tf.nn.bias_add(conv, biases)
+    conv1 = tf.nn.relu(pre_activation, name=scope.name)
+    _activation_summary(conv1)
+#pool1
+pool1 = tf.nn.max_pool(conv1, ksize=[1, 3, 3, 1], strides=[1, 2, 2, 1], padding='SAME', name='pool1')
+#norm1
+norm1 = tf.nn.lrn(pool1, 4, bias=1.0, alpha=0.001 / 9.0, beta=0.75, name='norm1')
+#conv2
+with tf.variable_scope('conv2') as scope:
+    kernel = _variable_with_weight_decay('weights', shape=[5, 5, 64, 64], stddev=5e-2, wd=None)
+    conv = tf.nn.conv2d(norm1, kernel, [1, 1, 1, 1], padding='SAME')
+    biases = _variable_on_cpu('biases', [64], tf.constant_initializer(0.1))
+    pre_activation = tf.nn.bias_add(conv, biases)
+    conv2 = tf.nn.relu(pre_activation, name=scope.name)
+    _activation_summary(conv2)
+#norm2
+norm2 = tf.nn.lrn(conv2, 4, bias=1.0, alpha=0.001 / 9.0, beta=0.75, name='norm2')
+#pool2
+pool2 = tf.nn.max_pool(norm2, ksize=[1, 3, 3, 1], strides=[1, 2, 2, 1], padding='SAME', name='pool2')
+#FC3
+with tf.variable_scope('fc3') as scope:
+    reshape = tf.reshape(pool2, [images.get_shape().as_list()[0], -1])
+    dim = reshape.get_shape()[1].value
+    weights = _variable_with_weight_decay('weights', shape=[dim, 384], stddev=0.04, wd=0.004)
+    biases = _variable_on_cpu('biases', [384], tf.constant_initializer(0.1))
+    fc3 = tf.nn.relu(tf.matmul(reshape, weights) + biases, name=scope.name)
+     _activation_summary(fc3)
+#FC4
+with tf.variable_scope(fc4') as scope:
+    weights = _variable_with_weight_decay('weights', shape=[384,192], stddev=0.04, wd=0.004)
+    biases = _variable_on_cpu('biases', [192], tf.constant_initializer(0.1))
+    fc4 = tf.nn.relu(tf.matmul(local3, weights) + biases, name=scope.name)
+    _activation_summary(fc4)
+اگر بخش های دیگه کد رو هم به این مجموعه اضافه کنید و خوش شانس باشید خروجی زیر رو می بینید:
+2018-04-25 11:45:45.927302: step 0, loss = 4.68 (2.0 examples/sec; 64.221 sec/batch)
+2018-04-25 11:45:49.133065: step 10, loss = 4.66 (533.8 examples/sec; 0.240 sec/batch)
+2018-04-25 11:45:51.397710: step 20, loss = 4.64 (597.4 examples/sec; 0.214 sec/batch)
+2018-04-25 11:45:54.446850: step 30, loss = 4.62 (391.0 examples/sec; 0.327 sec/batch)
+...
+دقت این مدل رو میشه به ازای داده های ورودی اندازه گرفت، نمودارهای مختلف مثل دقت-سرعت رو در زمان اجرا با استفاده از داشبورد مربوطه رسد و بررسی کرد و کلی کار دیگه که می تونه دقت و سرعت مدل رو افزایش بده. با پیاده سازی مدل یادگیری عمیق، حالا ما می تونیم به صورت خودکار کپچای سیستم گلستان رو بشکنیم! 
+این مطلب به صورت کامل در گیت هاب در دسترس هست. همچنین اگر علاقمند به موضوعات هوش مصنوعی، یادگیری ماشین و بینایی کامپیوتر هستید می تونید اکانت من رو در توییتر دنبال کنید. 
+https://t.co/LBdf7Fdc8r
 این ماجراجویی تموم شد. حالا نوبت شماست که دست به کار بشید و تجربیات خودتون رو به اشتراک بذارید. به نظر شما بینایی کامپیوتر تا چه حد می تونه زندگی ما رو تحت تاثیر قرار بده؟
