@@ -166,17 +166,12 @@ void learnCNN() {
 
 			delete[] data;
 		}
-		struct timespec wait;
-		wait.tv_sec = 1;
-		wait.tv_nsec = 0;
-		nanosleep(&wait, nullptr);
 	}
-	return 0;
 }
 
 int main(int argc, char** argv){
 	// Load image
-	Mat3b img = imread("E:\\MyWorks\\personal WebPage Design\\blog\\assets\\CAPTCHA Sample\\21.gif");
+	Mat3b img = imread(".\\assets\\CAPTCHA Sample\\21.gif");
 
 	// Setup a rectangle to define your region of interest
 	Rect roi(0, 0, img.cols, img.rows / 1.11);
