@@ -6,7 +6,7 @@
 #include <cstdio>
 #include <algorithm>
 #include "byteswap.h"
-#include "./CNN/"
+#include "./CNN/cnn.h"
 
 #include <opencv2/dnn.hpp>
 #include <opencv2/imgproc.hpp>
