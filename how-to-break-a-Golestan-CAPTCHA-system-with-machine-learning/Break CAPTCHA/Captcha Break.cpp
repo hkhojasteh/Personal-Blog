@@ -254,7 +254,7 @@ int main(int argc, char** argv){
 		rectangle(img_segmentation, Rect(x - 13, y - 13, 26, 26), Scalar(255, 255, 255));
 	}
 
-	//learnCNN();
+	learnCNN();
 
 	// Show result
 	imshow("Original", img);
