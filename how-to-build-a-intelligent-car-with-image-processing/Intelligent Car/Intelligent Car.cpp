@@ -4,23 +4,19 @@
 #include <cassert>
 #include <cstdint>
 #include <cstdio>
-#include <algorithm>
-#include "byteswap.h"
 
-#include <opencv2/dnn.hpp>
 #include <opencv2/imgproc.hpp>
 #include <opencv2/highgui.hpp>
 
 using namespace cv;
 using namespace std;
-using namespace dnn;
 
 int main(int argc, char** argv){
 	// Load image
 	Mat3b img = imread("..\\assets\\Road Sample\\Sample1.png");
 
 	// Setup a rectangle to define your region of interest
-	Rect roi(0, 0, img.cols, img.rows / 1.13);
+	Rect roi(0, 100, img.cols, (img.rows / 1.18) - 100);
 
 	//Crop the full image to that image contained by the rectangle myROI
 	Mat3b crop = img(roi);
