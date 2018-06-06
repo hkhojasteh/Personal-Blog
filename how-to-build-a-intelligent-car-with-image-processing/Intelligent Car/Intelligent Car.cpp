@@ -14,18 +14,50 @@ using namespace std;
 Mat3b img, img_crop;
 Mat detected_edges, img_mask;
 
+bool less_left(const Vec4i& lhs, const Vec4i& rhs){
+	return lhs[0] < rhs[0];
+}
+bool less_right(const Vec4i& lhs, const Vec4i& rhs) {
+	return lhs[0] > rhs[0];
+}
+
 // Standard Hough Line Transform
 void HoughTransform(void*) {
 	Mat img_hlines = img_crop.clone();
 	// will hold the results of the detection
-	vector<Vec4i> lines;
+	vector<Vec4i> lines, rightls, leftls;
 	// runs the actual detection
 	HoughLinesP(detected_edges, lines, 1, CV_PI / 180, 50, 30, 10);
 	// Draw the lines
 	for (size_t i = 0; i < lines.size(); i++) {
 		Vec4i l = lines[i];
 		line(img_hlines, Point(l[0], l[1]), Point(l[2], l[3]), Scalar(0, 255, 255), 2, CV_AA);
+		
+		//Calculating the slope and group lines
+		float slope = (float)(l[3] - l[1]) / (l[2] - l[0]);
+		if (slope > 0.40) {
+			rightls.push_back(l);
+			printf("right %f\n", slope);
+		}else if (slope < -0.40) {
+			leftls.push_back(l);
+			printf("left %f\n", slope);
+		}
 	}
+	auto lmmx = minmax_element(leftls.begin(), leftls.end(), less_left);
+	Point left_b(get<0>(lmmx)[0][0], get<0>(lmmx)[0][1]);
+	Point left_t(get<0>(lmmx)[0][2], get<0>(lmmx)[0][3]);
+	auto rmmx = minmax_element(rightls.begin(), rightls.end(), less_right);
+	Point right_b(get<0>(rmmx)[0][0], get<0>(rmmx)[0][1]);
+	Point right_t(get<0>(rmmx)[0][2], get<0>(rmmx)[0][3]);
+
+	Mat poly = img_hlines.clone();
+	vector<Point> vertices{ left_b, left_t, right_b, right_t };
+	vector<vector<Point>> pts{ vertices };
+	fillPoly(poly, pts, Scalar(58, 190, 37, 0));
+
+	addWeighted(poly, 0.50, img_hlines, 0.50, 0, img_hlines);
+
+
 	imshow("detected lines", img_hlines);
 }
 
@@ -48,7 +80,7 @@ void CannyThreshold(int, void*){
 
 int main(int argc, char** argv){
 	// Load image
-	img = imread("..\\assets\\Road Sample\\Sample10.png");
+	img = imread("..\\assets\\Road Sample\\Sample1.png");
 
 	// Setup a rectangle to define your region of interest
 	//Rect roi(0, 325, img.cols, img.rows - 455); //5
