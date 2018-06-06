@@ -11,10 +11,26 @@
 using namespace cv;
 using namespace std;
 
-Mat3b img;
+Mat3b img, img_crop;
 Mat detected_edges, img_mask;
+
+// Standard Hough Line Transform
+void HoughTransform(void*) {
+	Mat img_hlines = img_crop.clone();
+	// will hold the results of the detection
+	vector<Vec4i> lines;
+	// runs the actual detection
+	HoughLinesP(detected_edges, lines, 1, CV_PI / 180, 50, 30, 10);
+	// Draw the lines
+	for (size_t i = 0; i < lines.size(); i++) {
+		Vec4i l = lines[i];
+		line(img_hlines, Point(l[0], l[1]), Point(l[2], l[3]), Scalar(0, 255, 255), 2, CV_AA);
+	}
+	imshow("detected lines", img_hlines);
+}
+
 int const max_lowThreshold = 255;
-int lowThreshold = 210, ratio = 3, kernel_size = 3;
+int lowThreshold = 240, ratio = 3, kernel_size = 3;
 char* window_name = "Edge Map";
 // CannyThreshold: Trackbar callback - Canny thresholds input with a ratio 1:3
 void CannyThreshold(int, void*){
@@ -26,6 +42,8 @@ void CannyThreshold(int, void*){
 
 	// Using Canny's output as a mask and display our result
 	imshow(window_name, detected_edges);
+
+	HoughTransform(0);
 }
 
 int main(int argc, char** argv){
@@ -37,7 +55,7 @@ int main(int argc, char** argv){
 	Rect roi(0, 420, img.cols, img.rows - 500); //1 , 10
 
 	//Crop the full image to that image contained by the rectangle myROI
-	Mat3b img_crop = img(roi);
+	img_crop = img(roi);
 
 	// Convert image to gray, blur and sharpen it
 	Mat img_gray, mask_hsv_yellow, mask_white;
@@ -62,7 +80,7 @@ int main(int argc, char** argv){
 	// Show result
 	//imshow("Original", img);
 	//imshow("Crop", crop);
-	imshow("Gray", img_gray);
+	//imshow("Gray", img_gray);
 	//imshow("Mask", img_mask);
 
 	waitKey(0);
