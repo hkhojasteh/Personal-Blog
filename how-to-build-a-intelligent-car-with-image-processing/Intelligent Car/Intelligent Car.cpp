@@ -112,6 +112,16 @@ int main(int argc, char** argv){
 	// Load image
 	img = imread("..\\assets\\Road Sample\\Sample1.png");
 
+	// Or read data from camera
+	/*VideoCapture cap(0);     // open the default camera
+	if (!cap.isOpened())     // check if we successfully connected to camera
+		return -1;
+	for (;;) {
+		Mat frame;
+		cap >> frame;     // get a new frame from camera
+		 // Our codes ...
+	}*/
+
 	// Setup a rectangle to define your region of interest
 	//Rect roi(0, 325, img.cols, img.rows - 455); //5
 	Rect roi(0, 420, img.cols, img.rows - 500); //1 , 10
