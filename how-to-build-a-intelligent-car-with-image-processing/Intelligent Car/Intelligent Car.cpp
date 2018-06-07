@@ -148,6 +148,7 @@ int main(int argc, char** argv){
 		// Setup a rectangle to define your region of interest
 		Rect roi(0, 325, img.cols, img.rows - 455); //5
 		//Rect roi(0, 420, img.cols, img.rows - 500); //1 , 10
+		//Rect roi(0, 0, img.cols, img.rows);
 
 		//Crop the full image to that image contained by the rectangle myROI
 		img_crop = img(roi);
