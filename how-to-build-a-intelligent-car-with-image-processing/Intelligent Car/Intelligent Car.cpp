@@ -52,7 +52,7 @@ void HoughTransform(void*) {
 	}else{
 		// Set default values
 		left_b = Point(img_hlines.cols / 2, img_hlines.rows - 20);
-		left_t = Point(img_hlines.cols / 2, 20);
+		left_t = Point(img_hlines.cols / 2, 75);
 	}
 	if (rightls.size() > 0) {
 		auto rmmx = minmax_element(rightls.begin(), rightls.end(), less_right);
@@ -61,7 +61,7 @@ void HoughTransform(void*) {
 	}else{
 		// Set default values
 		right_t = Point(img_hlines.cols / 2, img_hlines.rows - 20);
-		right_b = Point(img_hlines.cols / 2, 20);
+		right_b = Point(img_hlines.cols / 2, 75);
 	}
 
 	/*vector<Point> fitPoints;
@@ -146,7 +146,7 @@ int main(int argc, char** argv){
 			break;
 
 		// Setup a rectangle to define your region of interest
-		Rect roi(0, 390, img.cols, img.rows - 520); //5
+		Rect roi(0, 325, img.cols, img.rows - 455); //5
 		//Rect roi(0, 420, img.cols, img.rows - 500); //1 , 10
 
 		//Crop the full image to that image contained by the rectangle myROI
