@@ -43,6 +43,7 @@ void HoughTransform(void*) {
 			leftls.push_back(l);
 		}
 	}
+	// Find regions
 	Point left_b, left_t, right_b, right_t;
 	if (leftls.size() > 0) {
 		auto lmmx = minmax_element(leftls.begin(), leftls.end(), less_left);

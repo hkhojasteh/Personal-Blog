@@ -88,11 +88,45 @@ CannyThreshold(0, 0);     // Show the image
           Vec4i l = lines[i];
           line(img_hlines, Point(l[0], l[1]), Point(l[2], l[3]), Scalar(0, 255, 255), 2, CV_AA);
      }
-     imshow("detected lines", img_hlines);
 
 خطوط یافت شده (زرد) با استفاده از پیکسل های لبه بعد از نگاشت از فضای هاف به فضای تصویر و قرار گرفته بر روی تصاویر اصلی
 گروه بندی و تصمیم گیری
 در مرحله آخر پردازش تصاویر، هدف ایجاد یک معیار برای تصمیم گیری است. اگر تا به اینجای کار همه چیز درست تعریف شده باشه، خطوطی خواهیم داشت که نماینده ای از خط کشی جاده برای مسیری هستند که در حال عبور از اون هستیم. ابتدا این خطوط رو به دو دسته خط کشی سمت راست و چپ تقسیم می کنیم. یک تفاوت آشکار بین دو گروه از خط ها، جهت شیب این خطوط است. اندازه شیب هر خط زاویه اون رو اندازه می گیره. خطوط افقی شیب صفر و خطوط عمودی شیب بینهایت دارند. در اینجا خط های یافته شده اندازه ای بین این دو مقدار دارند، چراکه اون ها از پایین تصویر به سمت مرکز، نسبت به افق زاویه دارند.
 جهت شیب یک خط نشون میده که با حرکت از چپ به راست، آیا خط به بالا حرکت می کنه یا پایین؟ خطوط با شیب منفی به سمت پایین و خطوط با شیب مثبت به بالا حرکت می کنند. این همان چیزی است که در سیستم مختصات عادی اتفاق می افته. در سیستم مختصاتی که ما از اون استفاده می کنیم، نقطه مرکز در گوشه بالا سمت چپ تصویر هست؛ یعنی در اینجا جهت شیب ما معکوس خواهد بود.
+پس خط های سمت راست شیب مثبت دارند و در به پایین حرکت می کنند. این دقیقا همون چیزیه که برای گروه بندی خطوط استفاده خواهیم کرد. مشاهدات نشون میدند که خطوطی که شیب خیلی کمی دارند احتمالا خطوط خوبی برای تصمیم گیری نیستند. بنابراین سعی می کنیم از این بین خطوطی که شیبی بیشتر/کمتر از 0.4 (+/-) دارند رو انتخاب کنیم. 
+bool less_left(const Vec4i& lhs, const Vec4i& rhs){     return lhs[0] < rhs[0];     }
+bool less_right(const Vec4i& lhs, const Vec4i& rhs) {     return lhs[0] > rhs[0];     }
+vector<Vec4i> rightls, leftls;
+// Calculating the slope and group lines
+float slope = (float)(l[3] - l[1]) / (l[2] - l[0]);
+if (slope > 0.40) {     rightls.push_back(l);     }else if (slope < -0.40) {     leftls.push_back(l);     }
+// Find regions
+Point left_b, left_t, right_b, right_t;
+if (leftls.size() > 0) {
+     auto lmmx = minmax_element(leftls.begin(), leftls.end(), less_left);
+     left_b = Point(get<0>(lmmx)[0][0], get<0>(lmmx)[0][1]);
+     left_t = Point(get<0>(lmmx)[0][2], get<0>(lmmx)[0][3]);
+}
+if (rightls.size() > 0) {
+     auto rmmx = minmax_element(rightls.begin(), rightls.end(), less_right);
+     right_t = Point(get<0>(rmmx)[0][0], get<0>(rmmx)[0][1]);
+     right_b = Point(get<0>(rmmx)[0][2], get<0>(rmmx)[0][3]);
+}
 
+Mat poly = img_hlines.clone();
+vector<Point> vertices{ left_b, left_t, right_t, right_b };
+vector<vector<Point>> pts{ vertices };
+fillPoly(poly, pts, Scalar(58, 190, 37, 0));
+addWeighted(poly, 0.50, img_hlines, 0.50, 0, img_hlines);
+
+// Find reference line points by average top and bottom middle
+float rx = (((right_b.x - left_b.x) / 2 + left_b.x) + ((right_t.x - left_t.x) / 2 + left_t.x)) / 2, ry = img_hlines.rows;
+// Draw dashed reference line
+Point p1(rx, 0), p2(rx, ry);
+LineIterator itl(img_hlines, p1, p2, 8);
+for (int i = 0; i < itl.count; i++, itl++) {
+     if (i % 5 != 0) {     (*itl)[1] = 80;     (*itl)[2] = 75;     }
+}
+
+نتیجه نهایی پردازش تصویر برای تشخیص خطوط و یافتن خط تصمیم گیری میزان انحراف خودرو از جاده در شب (بالا) و روز (پایین)
 
