@@ -118,7 +118,7 @@ void CannyThreshold(int, void*){
 
 int main(int argc, char** argv){
 	// Load image
-	//img = imread("..\\assets\\Road Sample\\Sample1.png");
+	//img = imread("..\\assets\\Road Sample\\Sample10.png");
 
 	//VideoCapture cap(0);     // open the camera
 
@@ -163,6 +163,7 @@ int main(int argc, char** argv){
 		inRange(img_crop, Scalar(20, 85, 85), Scalar(30, 255, 255), mask_hsv_yellow);
 		inRange(img_gray, Scalar(m[0] + (255 - m[0]) / 3.5), Scalar(255), mask_white);
 		bitwise_or(mask_white, mask_hsv_yellow, img_mask);
+		// bitwise_or(img_gray, img_mask, img_mask);
 		GaussianBlur(img_mask, img_mask, cv::Size(5, 5), 0);
 
 		detected_edges.create(img_mask.size(), img_mask.type());
