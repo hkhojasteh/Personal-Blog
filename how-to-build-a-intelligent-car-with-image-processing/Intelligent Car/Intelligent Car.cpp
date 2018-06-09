@@ -60,8 +60,8 @@ void HoughTransform(void*) {
 		right_b = Point(get<0>(rmmx)[0][2], get<0>(rmmx)[0][3]);
 	}else{
 		// Set default values
-		right_t = Point(img_hlines.cols / 2, img_hlines.rows - 20);
-		right_b = Point(img_hlines.cols / 2, 75);
+		right_b = Point(img_hlines.cols / 2, img_hlines.rows - 20);
+		right_t = Point(img_hlines.cols / 2, 75);
 	}
 
 	/*vector<Point> fitPoints;
@@ -177,8 +177,8 @@ int main(int argc, char** argv){
 		// Show result
 		//imshow("Original", img);
 		//imshow("Crop", crop);
-		//imshow("Gray", img_gray);
-		//imshow("Mask", img_mask);
+		imshow("Gray", img_gray);
+		imshow("Mask", img_mask);
 	}
 	// When everything done, release the video capture object
 	cap.release();
