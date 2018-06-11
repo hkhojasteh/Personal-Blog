@@ -12,7 +12,7 @@ using namespace cv;
 using namespace std;
 
 Mat3b img, img_crop;
-Mat detected_edges, img_mask;
+Mat detected_edges, img_mask, img_line;
 
 bool less_left(const Vec4i& lhs, const Vec4i& rhs){
 	return lhs[0] < rhs[0];
@@ -96,7 +96,10 @@ void HoughTransform(void*) {
 	vector<vector<Point>> tripts{ trivertices };
 	fillPoly(img_hlines, tripts, Scalar(103, 80, 75, 0));
 
-	imshow("detected lines", img_hlines);
+	img.copyTo(img_line);
+	img_hlines.copyTo(img_line(Rect(0, 325, img_hlines.cols, img_hlines.rows)));
+
+	imshow("detected lines", img_line);
 }
 
 int const max_lowThreshold = 255;
@@ -177,8 +180,8 @@ int main(int argc, char** argv){
 		// Show result
 		//imshow("Original", img);
 		//imshow("Crop", crop);
-		imshow("Gray", img_gray);
-		imshow("Mask", img_mask);
+		//imshow("Gray", img_gray);
+		//imshow("Mask", img_mask);
 	}
 	// When everything done, release the video capture object
 	cap.release();
