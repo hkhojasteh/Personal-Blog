@@ -14,13 +14,13 @@ namespace CANReadWrite{
     public partial class Form1 : Form{
         public SerialPort CabelPort;
         public Form1(){
-            //CabelPort = new SerialPort("COM3");
-            //CabelPort.Open();
-
             InitializeComponent();
         }
         
         private void ui_btn_read_Click(object sender, EventArgs e){
+            CabelPort = new SerialPort("COM3");
+            CabelPort.Open();
+
             string data = "";
             for (int i =0; i<50000; i++){
                 //ui_rtb_dataRead.Text += CabelPort.ReadExisting();
@@ -35,50 +35,63 @@ namespace CANReadWrite{
 
         }
 
+        List<string> frames;
+        private void updateFrameData(List<byte> data){
+            string s = (BitConverter.ToInt16(data.ToArray(), 0) & 0X7FF0).ToString("X");
+            frames.Add(s);
+
+            /*if (!frames.Exists(s => s == )){
+                frames.Add();
+            }*/
+        }
+
         private void ui_btn_readfile_Click(object sender, EventArgs e){
-            List<string> frames = new List<string>(); 
+            frames = new List<string>();
             int nof7Fs = 0;
             byte[] databyte = File.ReadAllBytes("data01.txt");
+            List<byte> realdata = new List<byte>();
             for (int i = 0; i < databyte.Length; i += 2){
                 string fbyted = (databyte[i]).ToString("X2");
+                realdata.Add(databyte[i]);
                 if (fbyted == "7F"){
+                    updateFrameData(realdata);
                     nof7Fs++;
-                    frames.Add(fbyted);
+                    realdata.Clear();
+                    AppendText(this.ui_rtb_dataRead, Color.Red, Color.Yellow, fbyted);
+                }else{
+                    AppendText(this.ui_rtb_dataRead, Color.Black, Color.White, fbyted);
                 }
                 if (i + 1 < databyte.Length){
                     string sbyted = (databyte[i + 1]).ToString("X2");
+                    realdata.Add(databyte[i + 1]);
                     if (sbyted == "7F"){
+                        updateFrameData(realdata);
                         nof7Fs++;
+                        realdata.Clear();
+                        AppendText(this.ui_rtb_dataRead, Color.Red, Color.Yellow, sbyted + " ");
+                    }else{
+                        AppendText(this.ui_rtb_dataRead, Color.Black, Color.White, sbyted + " ");
                     }
-                    ui_rtb_dataRead.Text += fbyted + sbyted + " ";
-                }else{
-                    ui_rtb_dataRead.Text += fbyted + " ";
-                }
-                //Refresh form intervally
-                if (i % 200 == 0){
-                    refreshRichTextBox();
                 }
             }
             ui_lbl_info.Text = "7F: " + nof7Fs;
-            ui_rtb_frames.Text = frames.Aggregate((i, j) => i + " " + j); ;
-            refreshRichTextBox();
-
-
+            ui_rtb_frames.Text = frames.Aggregate((i, j) => i + "\n" + j); ;
 
             //ui_rtb_dataRead.Text += (BitConverter.ToInt16(databyte, i) | 0x7F).ToString("X");
         }
 
-        private void refreshRichTextBox(){
-            for (int i = 0; i < ui_rtb_dataRead.Text.Length; i++){
-                if (ui_rtb_dataRead.Text[i] == '7' && ui_rtb_dataRead.Text[i + 1] == 'F'){
-                    ui_rtb_dataRead.SelectionStart = i;
-                    ui_rtb_dataRead.SelectionLength = 2;
-                    ui_rtb_dataRead.SelectionColor = Color.Red;
-                    ui_rtb_dataRead.SelectionBackColor = Color.Yellow;
-                }
+        void AppendText(RichTextBox box, Color fcolor, Color bcolor, string text){
+            int start = box.TextLength;
+            box.AppendText(text);
+            int end = box.TextLength;
+
+            // Textbox may transform chars, so (end-start) != text.Length
+            box.Select(start, end - start);{
+                box.SelectionColor = fcolor;
+                box.SelectionBackColor = bcolor;
+                // could set box.SelectionBackColor, box.SelectionFont too.
             }
-            ui_rtb_dataRead.ScrollToCaret();
-            Application.DoEvents();
+            box.SelectionLength = 0; // clear
         }
     }
 }
