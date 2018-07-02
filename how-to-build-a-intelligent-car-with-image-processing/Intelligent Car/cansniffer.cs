@@ -23,12 +23,11 @@ namespace CANReadWrite{
 
             string data = "";
             for (int i =0; i<50000; i++){
-                //ui_rtb_dataRead.Text += CabelPort.ReadExisting();
                 data += CabelPort.ReadExisting();
                 ui_rtb_dataRead.Text = data;
                 byte[] databyte;
                 databyte = Encoding.ASCII.GetBytes(ui_rtb_dataRead.Text);
-                File.WriteAllBytes(DateTime.Now.ToString("HH:mm:ss") + ".txt", databyte);
+                File.WriteAllBytes(DateTime.Now.ToString("HHmmss") + ".txt", databyte);
             }
             //CabelPort.WriteLine();
 
@@ -37,8 +36,11 @@ namespace CANReadWrite{
 
         List<string> frames;
         private void updateFrameData(List<byte> data){
-            string s = (BitConverter.ToInt16(data.ToArray(), 0) & 0X7FF0).ToString("X");
-            frames.Add(s);
+            string idf = (BitConverter.ToUInt16(data.ToArray(), 0) & 0X7FF0).ToString("X2");
+            string ids = (BitConverter.ToUInt32(data.ToArray(), 1) & 0X03FFFF00).ToString("X2");
+            //string len = ((BitConverter.ToUInt16(data.ToArray(), 4) & 0X1E00) >> 9).ToString();
+            string len = ((BitConverter.ToUInt16(data.ToArray(), 1) & 0X01E0) >> 5).ToString();
+            frames.Add(idf + " " + ids + "  " + len);
 
             /*if (!frames.Exists(s => s == )){
                 frames.Add();
@@ -48,30 +50,26 @@ namespace CANReadWrite{
         private void ui_btn_readfile_Click(object sender, EventArgs e){
             frames = new List<string>();
             int nof7Fs = 0;
-            byte[] databyte = File.ReadAllBytes("data01.txt");
+            byte[] databyte = File.ReadAllBytes("data03.txt");
             List<byte> realdata = new List<byte>();
-            for (int i = 0; i < databyte.Length; i += 2){
-                string fbyted = (databyte[i]).ToString("X2");
-                realdata.Add(databyte[i]);
-                if (fbyted == "7F"){
-                    updateFrameData(realdata);
-                    nof7Fs++;
-                    realdata.Clear();
-                    AppendText(this.ui_rtb_dataRead, Color.Red, Color.Yellow, fbyted);
-                }else{
-                    AppendText(this.ui_rtb_dataRead, Color.Black, Color.White, fbyted);
-                }
-                if (i + 1 < databyte.Length){
-                    string sbyted = (databyte[i + 1]).ToString("X2");
-                    realdata.Add(databyte[i + 1]);
-                    if (sbyted == "7F"){
+            for (int i = 0, charCount = 0; i < databyte.Length; i++){
+                string byted = (databyte[i]).ToString("X2");
+                if (byted != "3F" && byted != "29"){
+                    realdata.Add(databyte[i]);
+                    if (byted == "7F"){
                         updateFrameData(realdata);
                         nof7Fs++;
                         realdata.Clear();
-                        AppendText(this.ui_rtb_dataRead, Color.Red, Color.Yellow, sbyted + " ");
+                        AppendText(this.ui_rtb_dataRead, Color.Red, Color.Yellow, byted);
+                        charCount++;
                     }else{
-                        AppendText(this.ui_rtb_dataRead, Color.Black, Color.White, sbyted + " ");
+                        AppendText(this.ui_rtb_dataRead, Color.Black, Color.White, byted);
+                        charCount++;
                     }
+                }
+                if (charCount == 1){
+                    AppendText(this.ui_rtb_dataRead, Color.Black, Color.White, " ");
+                    charCount = 0;
                 }
             }
             ui_lbl_info.Text = "7F: " + nof7Fs;
