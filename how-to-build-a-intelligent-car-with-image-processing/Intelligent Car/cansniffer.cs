@@ -12,26 +12,47 @@ using System.Windows.Forms;
 
 namespace CANReadWrite{
     public partial class Form1 : Form{
-        public SerialPort CabelPort;
+        public SerialPort serialPort;
         public Form1(){
             InitializeComponent();
         }
-        
+
         private void ui_btn_read_Click(object sender, EventArgs e){
-            CabelPort = new SerialPort("COM3");
-            CabelPort.Open();
-
-            string data = "";
-            for (int i =0; i<50000; i++){
-                data += CabelPort.ReadExisting();
-                ui_rtb_dataRead.Text = data;
-                byte[] databyte;
-                databyte = Encoding.ASCII.GetBytes(ui_rtb_dataRead.Text);
-                File.WriteAllBytes(DateTime.Now.ToString("HHmmss") + ".txt", databyte);
+            if (serialPort == null || !serialPort.IsOpen){
+                serialPort = new SerialPort("COM3");
+                //SerialPort.Open();
+            }else{
+                serialPort.Close();
             }
-            //CabelPort.WriteLine();
 
-
+            if (ui_btn_read.Text == "ReadPort"){
+                ui_btn_read.Text = "StopRead";
+            }else{
+                ui_btn_read.Text = "ReadPort";
+            }
+            
+            isRead = !isRead;
+            readData();
+        }
+        
+        private bool isRead = false;
+        private void readData(){
+            string fileName = DateTime.Now.ToString("HHmmss") + ".txt";
+            byte[] data = new byte[20];
+            while (true){
+                if (!isRead){
+                    return;
+                }
+                serialPort.Read(data, 0, serialPort.BytesToRead);
+                using (var stream = new FileStream(fileName, FileMode.Append)){
+                    stream.Write(data, 0, data.Length);
+                }
+                StringBuilder hex = new StringBuilder(data.Length * 2);
+                for (int i = 0; i < data.Length; i += 2){
+                    hex.AppendFormat("{0:x2}{1:x2} ", data[i], data[i + 1]);
+                }
+                ui_rtb_dataRead.Text += hex.ToString();
+            }
         }
 
         List<string> frames;
@@ -50,11 +71,11 @@ namespace CANReadWrite{
         private void ui_btn_readfile_Click(object sender, EventArgs e){
             frames = new List<string>();
             int nof7Fs = 0;
-            byte[] databyte = File.ReadAllBytes("data03.txt");
+            byte[] databyte = File.ReadAllBytes("data01.txt");
             List<byte> realdata = new List<byte>();
             for (int i = 0, charCount = 0; i < databyte.Length; i++){
                 string byted = (databyte[i]).ToString("X2");
-                if (byted != "3F" && byted != "29"){
+                if (byted != "3F"){
                     realdata.Add(databyte[i]);
                     if (byted == "7F"){
                         updateFrameData(realdata);
