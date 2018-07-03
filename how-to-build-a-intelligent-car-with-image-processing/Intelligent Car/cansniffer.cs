@@ -152,5 +152,19 @@ namespace CANReadWrite{
             ui_lbl_info.Text = "7F: " + nof7Fs;
             ui_rtb_frames.Text = frames.Aggregate((i, j) => i + "\n" + j);
         }
+
+        private void button2_Click(object sender, EventArgs e){
+            string databyte = File.ReadAllText("f_2180.txt"); //f_47A0, f_2180, f_5880
+            List<byte> realdata = new List<byte>();
+
+            if (serialPort == null || !serialPort.IsOpen){
+                serialPort = new SerialPort("COM7");
+                serialPort.Open();
+            }
+            for (int i = 0; i < databyte.Length - 1; i++){
+                string byted = databyte[i].ToString() + databyte[i + 1].ToString();
+                serialPort.Write(byted.ToLower());
+            }
+        }
     }
 }
