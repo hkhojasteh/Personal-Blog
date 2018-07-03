@@ -20,7 +20,6 @@ namespace CANReadWrite{
         private void ui_btn_read_Click(object sender, EventArgs e){
             if (serialPort == null || !serialPort.IsOpen){
                 serialPort = new SerialPort("COM7");
-
                 serialPort.Open();
             }else{
                 serialPort.Close();
@@ -66,7 +65,6 @@ namespace CANReadWrite{
                 string ids = (BitConverter.ToUInt32(data.ToArray(), 1) & 0X03FFFF00).ToString("X2");
                 //string len = ((BitConverter.ToUInt16(data.ToArray(), 4) & 0X1E00) >> 9).ToString();
                 string len = ((BitConverter.ToUInt16(data.ToArray(), 1) & 0X01E0) >> 5).ToString();
-
 
                 StringBuilder formatdata = new StringBuilder(data.Count * 2);
                 for (int i = 0; i < data.Count; i += 2){
@@ -124,7 +122,7 @@ namespace CANReadWrite{
             box.SelectionLength = 0; // clear
         }
 
-        private void button1_Click(object sender, EventArgs e){
+        private void ui_btn_readtxtfile_Click(object sender, EventArgs e){
             frames = new List<string>();
             int nof7Fs = 0;
             string databyte = File.ReadAllText("p5.txt");
@@ -153,7 +151,7 @@ namespace CANReadWrite{
             ui_rtb_frames.Text = frames.Aggregate((i, j) => i + "\n" + j);
         }
 
-        private void button2_Click(object sender, EventArgs e){
+        private void ui_btn_writeFromFile_Click(object sender, EventArgs e){
             string databyte = File.ReadAllText("f_2180.txt"); //f_47A0, f_2180, f_5880
             List<byte> realdata = new List<byte>();
 
