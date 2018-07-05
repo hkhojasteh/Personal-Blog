@@ -59,6 +59,7 @@ namespace CANReadWrite{
         }
 
         List<string> frames;
+        List<string> framesIds = new List<string>();
         private void updateFrameData(List<byte> data){
             try {
                 string idf = (BitConverter.ToUInt16(data.ToArray(), 0) & 0X7FF0).ToString("X2");
@@ -67,20 +68,20 @@ namespace CANReadWrite{
                 string len = ((BitConverter.ToUInt16(data.ToArray(), 1) & 0X01E0) >> 5).ToString();
 
                 StringBuilder formatdata = new StringBuilder(data.Count * 2);
-                for (int i = 0; i < data.Count; i += 2){
+                for (int i = 2; i < data.Count && i < 10; i += 2){
                     formatdata.AppendFormat("{0:x2}{1:x2} ", data[i], data[i + 1]);
                 }
-                frames.Add(idf + " " + ids + "  " + len + " " );
+                if (!framesIds.Exists(s => s == idf + ids)){
+                    frames.Add(idf + " " + ids + "  " + len + " " + formatdata.ToString());
+                    framesIds.Add(idf + ids);
+                }
             }catch{ };
-            /*if (!frames.Exists(s => s == )){
-                frames.Add();
-            }*/
         }
 
         private void ui_btn_readfile_Click(object sender, EventArgs e){
             frames = new List<string>();
             int nof7Fs = 0;
-            byte[] databyte = File.ReadAllBytes("222809.txt");
+            byte[] databyte = File.ReadAllBytes("210419.txt");  //220227.txt, 222809.txt, 211826.txt, 210419.txt
             List<byte> realdata = new List<byte>();
             for (int i = 0, charCount = 0; i < databyte.Length; i++){
                 string byted = (databyte[i]).ToString("X2");
@@ -90,33 +91,37 @@ namespace CANReadWrite{
                         updateFrameData(realdata);
                         nof7Fs++;
                         realdata.Clear();
-                        AppendText(this.ui_rtb_dataRead, Color.Red, Color.Yellow, byted);
+                        AppendText(this.ui_rtb_dataRead, byted, Color.Red, Color.Yellow);
                         charCount++;
+                        //Update frames
+                        ui_lbl_info.Text = "7F: " + nof7Fs;
+                        ui_rtb_frames.Text = frames.Aggregate((k, j) => k + "\n" + j);
                     }else{
-                        AppendText(this.ui_rtb_dataRead, Color.Black, Color.White, byted);
+                        AppendText(this.ui_rtb_dataRead, byted);
                         charCount++;
                     }
                 }
-                if (charCount == 2){
-                    AppendText(this.ui_rtb_dataRead, Color.Black, Color.White, " ");
-                    charCount = 0;
+                if (charCount % 2 == 0){
+                    AppendText(this.ui_rtb_dataRead, " ");
+                }
+                if (charCount % 20 == 0){
+                    // scroll it automatically
+                    ui_rtb_dataRead.SelectionStart = ui_rtb_dataRead.Text.Length;
+                    ui_rtb_dataRead.ScrollToCaret();
                 }
             }
-            ui_lbl_info.Text = "7F: " + nof7Fs;
-            ui_rtb_frames.Text = frames.Aggregate((i, j) => i + "\n" + j);
-
             //ui_rtb_dataRead.Text += (BitConverter.ToInt16(databyte, i) | 0x7F).ToString("X");
         }
 
-        void AppendText(RichTextBox box, Color fcolor, Color bcolor, string text){
+        void AppendText(RichTextBox box, string text, Color? fcolor = null, Color? bcolor = null){
             int start = box.TextLength;
             box.AppendText(text);
             int end = box.TextLength;
 
             // Textbox may transform chars, so (end-start) != text.Length
             box.Select(start, end - start);{
-                box.SelectionColor = fcolor;
-                box.SelectionBackColor = bcolor;
+                box.SelectionColor = fcolor.GetValueOrDefault(Color.LightGray);
+                box.SelectionBackColor = bcolor.GetValueOrDefault(Color.Black);
                 // could set box.SelectionBackColor, box.SelectionFont too.
             }
             box.SelectionLength = 0; // clear
@@ -135,15 +140,15 @@ namespace CANReadWrite{
                         updateFrameData(realdata);
                         nof7Fs++;
                         realdata.Clear();
-                        AppendText(this.ui_rtb_dataRead, Color.Red, Color.Yellow, byted);
+                        AppendText(this.ui_rtb_dataRead, byted, Color.Red, Color.Yellow);
                         charCount++;
                     }else{
-                        AppendText(this.ui_rtb_dataRead, Color.Black, Color.White, byted);
+                        AppendText(this.ui_rtb_dataRead, byted);
                         charCount++;
                     }
                 }
                 if (charCount == 2){
-                    AppendText(this.ui_rtb_dataRead, Color.Black, Color.White, " ");
+                    AppendText(this.ui_rtb_dataRead, " ");
                     charCount = 0;
                 }
             }
@@ -162,6 +167,50 @@ namespace CANReadWrite{
             for (int i = 0; i < databyte.Length - 1; i++){
                 string byted = databyte[i].ToString() + databyte[i + 1].ToString();
                 serialPort.Write(byted.ToLower());
+            }
+        }
+
+        private void ui_btn_demo_Click(object sender, EventArgs e){
+            frames = new List<string>();
+            int nof7Fs = 0;
+            string[] paths = { "220227.txt", "222809.txt", "211826.txt", "210419.txt",
+                               "220227.txt", "222809.txt", "211826.txt", "210419.txt",
+                               "220227.txt", "222809.txt", "211826.txt", "210419.txt",
+                               "220227.txt", "222809.txt", "211826.txt", "210419.txt",
+                               "220227.txt", "222809.txt", "211826.txt", "210419.txt"};
+            foreach (string path in paths){
+                byte[] databyte = File.ReadAllBytes(path);  //220227.txt, 222809.txt, 211826.txt, 210419.txt
+                List<byte> realdata = new List<byte>();
+                for (int i = 0, charCount = 0; i < databyte.Length; i++){
+                    string byted = (databyte[i]).ToString("X2");
+                    if (byted != "3F"){
+                        realdata.Add(databyte[i]);
+                        if (byted == "7F"){
+                            updateFrameData(realdata);
+                            nof7Fs++;
+                            realdata.Clear();
+                            AppendText(this.ui_rtb_dataRead, byted, Color.Red, Color.Yellow);
+                            charCount++;
+                            //Update frames
+                            ui_lbl_info.Text = "7F: " + nof7Fs;
+                            try{
+                                ui_rtb_frames.Text = frames.Aggregate((k, j) => k + "\n" + j);
+                            }catch{ }
+                        }else{
+                            AppendText(this.ui_rtb_dataRead, byted);
+                            charCount++;
+                        }
+                    }
+                    if (charCount % 2 == 0){
+                        AppendText(this.ui_rtb_dataRead, " ");
+                    }
+                    if (charCount % 100 == 0){
+                        // scroll it automatically
+                        ui_rtb_dataRead.SelectionStart = ui_rtb_dataRead.Text.Length;
+                        ui_rtb_dataRead.ScrollToCaret();
+                        Application.DoEvents();
+                    }
+                }
             }
         }
     }
