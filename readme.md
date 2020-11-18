@@ -8,20 +8,20 @@
 <img src="./how-to-break-a-Golestan-CAPTCHA-system-with-machine-learning/assets/Header.png">
 <p style="color: #666;">How to break a Golestan CAPTCHA system with machine learning</p>
 <p>چطوری کپچای سیستم گلستان رو با کمک یادگیری ماشین بشکنیم؟</p>
-https://virgool.io/@hadiakhojasteh/how-to-break-a-golestan-captcha-system-with-machine-learning-kukzjnwwsqdx
+https://virgool.io/@hadiakhojasteh/how-to-break-a-golestan-captcha-system-with-machine-learning-kukzjnwwsqdx</br>
 </center>
 </br>
 <center>
 <img src="./how-to-build-an-intelligent-car-with-image-processing/assets/Header.png">
 <p style="color: #666;">How to build an intelligent car with image processing</p>
 <p>هک خودرو؛ چطوری با پردازش تصویر خودرومونو هوشمند کنیم؟</p>
-https://virgool.io/@hadiakhojasteh/how-to-build-an-intelligent-car-with-image-processing-rkgz4q8v37xg
+https://virgool.io/@hadiakhojasteh/how-to-build-an-intelligent-car-with-image-processing-rkgz4q8v37xg</br>
 </center>
 </br>
 <center>
 <img src="./how-to-find-airplane-in-images/assets/cover.png">
 <p style="color: #666;">How to detect airplanes in satellite imagery with convolutional neural networks</p>
-<p></p>چطوری با بینایی کامپیوتر هواپیماها رو در تصویر هوایی پیدا کنیم؟
+چطوری با بینایی کامپیوتر هواپیماها رو در تصویر هوایی پیدا کنیم؟<p></p>
 https://vrgl.ir/2XOI1
 </center>
 
